@@ -1,7 +1,7 @@
 #include <WiFi.h>
 #include <DHT.h>
 #include <FirebaseESP32.h>
-#include "secrets.h" // File chứa thông tin cấu hình WiFi và Firebase
+#include "secrets.h"
 
 // 3. Định nghĩa chân kết nối (GPIO)
 #define DHTPIN 23
@@ -11,47 +11,60 @@
 
 // Khởi tạo các đối tượng
 DHT dht(DHTPIN, DHTTYPE);
-FirebaseData firebaseDataStream; // Đối tượng riêng dành cho việc lắng nghe Stream (nhận lệnh)
-FirebaseData firebaseDataWrite;  // Đối tượng riêng dành cho việc đẩy dữ liệu lên (DHT11, Button)
+FirebaseData firebaseDataStream; 
+FirebaseData firebaseDataWrite;  
 FirebaseAuth auth;
 FirebaseConfig config;
 
-// Các biến quản lý thời gian gửi dữ liệu (Tránh dùng delay() làm mất kết nối Stream)
+// Các biến quản lý thời gian
 unsigned long lastSendTime = 0;
 const unsigned long sendInterval = 3000; // Gửi dữ liệu DHT11 mỗi 3 giây
 
-// Biến lưu trạng thái nút bấm trước đó để tránh gửi trùng lặp liên tục
-int lastButtonState = HIGH; 
+// Biến quản lý trạng thái hệ thống
+int currentBuzzerState = 0;       // 0: Tắt, 1: Bật (Do người dùng hoặc nhiệt độ kích hoạt)
+float tempThreshold = 35.0;       // Ngưỡng nhiệt độ mặc định, sẽ bị ghi đè nếu thay đổi trên Firebase
+float currentTemperature = 0.0;
 
-// Hàm Callback xử lý khi Firebase thay đổi trạng thái Buzzer (Chiều nhận lệnh từ Android)
+// Biến chống dội phím (Debounce Button)
+int lastButtonState = HIGH;
+unsigned long lastDebounceTime = 0;
+unsigned long debounceDelay = 50; // 50ms để lọc nhiễu khi bấm nút
+
+// Hàm Callback xử lý khi Firebase thay đổi trạng thái hệ thống (Stream)
 void streamCallback(StreamData data) {
-  if (data.dataType() == "int") {
-    int buzzerStatus = data.intData();
-    Serial.printf("Nhận lệnh còi Buzzer từ Firebase: %d\n", buzzerStatus);
-    
-    if (buzzerStatus == 1) {
-      digitalWrite(BUZZER_PIN, HIGH); // Bật còi
-    } else {
-      digitalWrite(BUZZER_PIN, LOW);  // Tắt còi
+  String path = data.dataPath();
+  
+  // Trường hợp 1: Nhận lệnh điều khiển Buzzer (từ App hoặc chính nút bấm gửi lên)
+  if (path == "/buzzer_trigger") {
+    if (data.dataType() == "int") {
+      currentBuzzerState = data.intData();
+      Serial.printf("Trạng thái còi cập nhật: %d\n", currentBuzzerState);
+      digitalWrite(BUZZER_PIN, currentBuzzerState == 1 ? HIGH : LOW);
+    }
+  }
+  
+  // Trường hợp 2: Nhận ngưỡng nhiệt độ cấu hình từ App Android
+  else if (path == "/temperature_threshold") {
+    if (data.dataType() == "float" || data.dataType() == "int") {
+      tempThreshold = data.floatData();
+      Serial.printf("Ngưỡng nhiệt độ cảnh báo mới: %.1f °C\n", tempThreshold);
     }
   }
 }
 
-// Hàm Callback xử lý khi đường truyền Stream bị ngắt quãng
 void streamTimeoutCallback(bool timeout) {
-  if (timeout) {
-    Serial.println("Stream bị timeout, đang tự động kết nối lại...");
-  }
+  if (timeout) Serial.println("Stream bị timeout, đang tự động kết nối lại...");
 }
 
 void setup() {
   Serial.begin(115200);
   
-  // Cấu hình phần cứng
   dht.begin();
-  pinMode(BUTTON_PIN, INPUT_PULLUP); // Dùng điện trở kéo lên nội bộ cho nút nhấn
+  delay(2000); // Chờ DHT11 ổn định
+  
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
   pinMode(BUZZER_PIN, OUTPUT);
-  digitalWrite(BUZZER_PIN, LOW);     // Mặc định còi tắt
+  digitalWrite(BUZZER_PIN, LOW);     
 
   // Kết nối WiFi
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
@@ -60,68 +73,80 @@ void setup() {
     Serial.print(".");
     delay(500);
   }
-  Serial.println("\nWiFi đã kết nối thành công!");
-  Serial.print("Địa chỉ IP: ");
-  Serial.println(WiFi.localIP());
+  Serial.println("\nWiFi đã kết nối!");
 
   // Cấu hình Firebase
   config.host = FIREBASE_HOST;
   config.signer.tokens.legacy_token = FIREBASE_AUTH;
-  
+  config.cert.data = NULL; // Sửa lỗi SSL engine closed
+
   Firebase.reconnectWiFi(true);
   Firebase.begin(&config, &auth);
 
-  // Bắt đầu lắng nghe "Stream" từ ô dữ liệu 'buzzer_trigger' trên Firebase
-  if (!Firebase.beginStream(firebaseDataStream, "/iot_project/buzzer_trigger")) {
-    Serial.println("Không thể thiết lập Stream lắng nghe Firebase: " + firebaseDataStream.errorReason());
+  // Bắt đầu lắng nghe "Stream" toàn bộ thư mục gốc của dự án để nhận nhiều biến cùng lúc
+  if (!Firebase.beginStream(firebaseDataStream, "/iot_project")) {
+    Serial.println("Không thể thiết lập Stream: " + firebaseDataStream.errorReason());
   }
-  
-  // Đăng ký các hàm xử lý sự kiện Stream
   Firebase.setStreamCallback(firebaseDataStream, streamCallback, streamTimeoutCallback);
+
+  // Khởi tạo sẵn biến ngưỡng trên Firebase nếu chưa có
+  Firebase.setFloat(firebaseDataWrite, "/iot_project/temperature_threshold", tempThreshold);
 }
 
 void loop() {
   unsigned long currentMillis = millis();
 
-  // CHIỀU 1: GỬI NHIỆT ĐỘ, ĐỘ ẨM LÊN FIREBASE ĐỊNH KỲ
+  // --- CHIỀU 1: ĐỌC DHT11 & XỬ LÝ CẢNH BÁO NHIỆT ĐỘ ---
   if (currentMillis - lastSendTime >= sendInterval) {
     lastSendTime = currentMillis;
 
     float h = dht.readHumidity();
     float t = dht.readTemperature();
 
-    // Kiểm tra xem cảm biến đọc có lỗi không
-    if (isnan(h) || isnan(t)) {
-      Serial.println("Lỗi đọc từ cảm biến DHT11!");
-    } else {
-      Serial.printf("Nhiệt độ: %.1f °C | Độ ẩm: %.1f %%\n", t, h);
+    if (!isnan(h) && !isnan(t)) {
+      currentTemperature = t;
+      Serial.printf("Nhiệt độ: %.1f °C | Độ ẩm: %.1f %% | Ngưỡng: %.1f °C\n", t, h, tempThreshold);
       
-      // Đẩy dữ liệu lên Firebase
-      if (Firebase.setFloat(firebaseDataWrite, "/iot_project/temperature", t)) {
-        Serial.println("-> Cập nhật Nhiệt độ thành công.");
-      } else {
-        Serial.println("Lỗi cập nhập Nhiệt độ: " + firebaseDataWrite.errorReason());
-      }
-      if (Firebase.setFloat(firebaseDataWrite, "/iot_project/humidity", h)) {
-        Serial.println("-> Cập nhật Độ ẩm thành công.");
-      } else {
-        Serial.println("Lỗi cập nhập Độ ẩm: " + firebaseDataWrite.errorReason());
+      // Gửi dữ liệu lên Firebase
+      Firebase.setFloat(firebaseDataWrite, "/iot_project/temperature", t);
+      Firebase.setFloat(firebaseDataWrite, "/iot_project/humidity", h);
+
+      // KIỂM TRA NGƯỠNG NHIỆT ĐỘ
+      if (currentTemperature > tempThreshold) {
+        if (currentBuzzerState == 0) { // Nếu còi đang tắt thì mới kích hoạt bật
+          Serial.println("!!! CẢNH BÁO: Nhiệt độ vượt ngưỡng !!!");
+          Firebase.setInt(firebaseDataWrite, "/iot_project/buzzer_trigger", 1); 
+          // Khi update lên Firebase, hàm streamCallback tự kích hoạt còi kêu
+        }
       }
     }
   }
 
-  // CHIỀU 2: KIỂM TRA NÚT NHẤN VÀ CẬP NHẬT TRẠNG THÁI TỨC THÌ
-  int currentButtonState = digitalRead(BUTTON_PIN);
-  if (currentButtonState != lastButtonState) {
-    lastButtonState = currentButtonState;
-    
-    // Nếu nút được nhấn (Mức LOW do dùng INPUT_PULLUP)
-    if (currentButtonState == LOW) {
-      Serial.println("Nút nhấn được KÍCH HOẠT!");
-      Firebase.setBool(firebaseDataWrite, "/iot_project/button_pressed", true);
-    } else {
-      Serial.println("Nút nhấn được THẢ RA!");
-      Firebase.setBool(firebaseDataWrite, "/iot_project/button_pressed", false);
+  // --- CHIỀU 2: XỬ LÝ NÚT NHẤN CHUYỂN TRẠNG THÁI (TOGGLE) ---
+  int reading = digitalRead(BUTTON_PIN);
+
+  // Nếu trạng thái chân nút bấm thay đổi (do nhấn hoặc do nhiễu)
+  if (reading != lastButtonState) {
+    lastDebounceTime = currentMillis; // Reset lại thời gian chờ chống dội
+  }
+
+  if ((currentMillis - lastDebounceTime) > debounceDelay) {
+    // Nếu trạng thái đã ổn định qua thời gian lọc nhiễu, kiểm tra xem có thực sự đổi trạng thái không
+    static int stabilizedButtonState = HIGH;
+    if (reading != stabilizedButtonState) {
+      stabilizedButtonState = reading;
+
+      // Phát hiện khoảnh khắc NÚT VỪA ĐƯỢC NHẤN XUỐNG (Mức LOW)
+      if (stabilizedButtonState == LOW) {
+        Serial.println("Nút được bấm -> Đảo trạng thái còi");
+        
+        // Đảo trạng thái hiện tại: nếu đang 1 thành 0, nếu đang 0 thành 1
+        int nextBuzzerState = (currentBuzzerState == 1) ? 0 : 1;
+        
+        // Đẩy trạng thái mới lên Firebase để đồng bộ cho cả App và Còi
+        Firebase.setInt(firebaseDataWrite, "/iot_project/buzzer_trigger", nextBuzzerState);
+      }
     }
   }
+  lastButtonState = reading;
 }
