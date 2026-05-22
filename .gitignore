@@ -1,1 +1,4 @@
 secrets.h 
+App/build/
+App/.idea/
+App/*.iml

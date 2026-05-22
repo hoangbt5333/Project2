@@ -67,4 +67,20 @@
         android:text="Cập nhật ngưỡng"
         android:layout_marginTop="5dp"/>
 
+    <!-- Thêm đoạn này vào cuối cùng của LinearLayout cũ -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Biểu đồ xu hướng"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginTop="20dp"/>
+
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/lineChart"
+        android:layout_width="match_parent"
+        android:layout_height="250dp"
+        android:layout_marginTop="10dp"
+        android:background="#F5F5F5"/>
+
 </LinearLayout>
