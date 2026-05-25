@@ -23,6 +23,12 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.abs
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 
 class MainActivity : AppCompatActivity() {
 
@@ -67,6 +73,12 @@ class MainActivity : AppCompatActivity() {
         edtThreshold = findViewById(R.id.edtThreshold)
         lineChart = findViewById(R.id.lineChart)
         setupChart()
+
+        // 1. KIỂM TRA VÀ XIN QUYỀN THÔNG BÁO (Android 13 trở lên yêu cầu kích hoạt bằng tay)
+        checkAndRequestNotificationPermission()
+
+        // 2. KHỞI CHẠY DỊCH VỤ CHẠY NGẦM FOREGROUND SERVICE
+        startIoTService()
 
 
         // --- CHIỀU 1: LẮNG NGHE DỮ LIỆU THỜI GIAN THỰC TỪ FIREBASE ---
@@ -294,5 +306,28 @@ class MainActivity : AppCompatActivity() {
             LineData(tempDataSet, humidDataSet)
 
         lineChart.invalidate()
+    }
+
+    private fun startIoTService() {
+        val serviceIntent = Intent(this, IoTBackgroundService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent) // Gọi hàm đặc biệt dành cho Android 8.0+
+        } else {
+            startService(serviceIntent)
+        }
+    }
+
+    private fun checkAndRequestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // API 33 (Android 13)
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED) {
+
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                    101
+                )
+            }
+        }
     }
 }
