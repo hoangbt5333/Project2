@@ -16,6 +16,10 @@ import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.data.RadarData
+import com.github.mikephil.charting.data.RadarDataSet
+import com.github.mikephil.charting.data.RadarEntry
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.google.firebase.database.*
 import kotlinx.coroutines.launch
@@ -25,6 +29,9 @@ import kotlin.collections.ArrayList
 import kotlin.math.abs
 
 class HomeFragment : Fragment() {
+
+    // 1. Khai báo bộ não AI ở đầu class HomeFragment
+    private val aiEngine: AiRecommendationEngine by lazy { RuleBasedAiImpl() }  // Rule Based AI
 
     // Khai báo các thành phần UI trong Fragment
     private lateinit var tvSystemStatus: TextView
@@ -175,8 +182,9 @@ class HomeFragment : Fragment() {
                 // Vẽ mạng nhện dinh dưỡng
                 updateRadarChart(n, p, k)
 
-                // 3. CHẠY BỘ NÃO RULE-BASED AI
-                runRuleBasedAI(soilMoist, temp, humid, n, p, k)
+                // 3. CHẠY BỘ NÃO AI
+                val aiResult = aiEngine.analyze(soilMoist, temp, humid, n, p, k)
+                renderAiRecommendation(aiResult)
 
                 // 4. THUẬT TOÁN CHỐNG SPAM GHI LỊCH SỬ VÀO ROOM
                 val currentTime = System.currentTimeMillis()
@@ -214,132 +222,87 @@ class HomeFragment : Fragment() {
         myRef.addValueEventListener(valueEventListener!!)
     }
 
-    private fun runRuleBasedAI(soilMoist: Int, temp: Double, humid: Double, n: Int, p: Int, k: Int) {
-        if (!isAdded) return // Bảo vệ app không bị crash nếu fragment chưa gắn vào view
-
-        // --- 1. BIẾN LƯU TRỮ TRẠNG THÁI TẠM THỜI ---
-        var analysisText = ""
-
-        var waterTitle = "Độ ẩm ổn định"
-        var waterSub = "Không cần tưới nước cho cây"
-
-        var fertilizerTitle = "Dinh dưỡng tốt"
-        var fertilizerSub = "Đất cân bằng, phù hợp nuôi cây"
-
-        var cropType = "Cà chua, Ớt, Rau cải" // Mặc định lý tưởng
-
-        // --- 2. HỆ THỐNG LUẬT PHÂN TÍCH ĐỘ ẨM ĐẤT (WATER LOGIC) ---
-        if (soilMoist < 40) {
-            waterTitle = "CẦN TƯỚI NGAY!"
-            if (temp > 32.0) {
-                analysisText = "Đất đang bị khô cằn nghiêm trọng. Nhiệt độ môi trường rất cao ($temp°C) làm tăng tốc độ bốc hơi nước."
-                waterSub = "Kích hoạt tưới đẫm/phun sương hạ nhiệt"
-            } else {
-                analysisText = "Đất đang ở trạng thái khô dưới mức tiêu chuẩn."
-                waterSub = "Bật máy bơm tưới nhẹ bổ sung độ ẩm"
-            }
-        } else if (soilMoist > 80) {
-            waterTitle = "NGẬP ÚNG KHẨN CẤP"
-            waterSub = "Ngắt toàn bộ bơm, khơi thông rãnh thoát"
-            analysisText = "Đất đang bị quá tải nước, hệ rễ có nguy cơ bị thối do thiếu oxy."
-        } else {
-            // Độ ẩm lý tưởng từ 40% - 80%
-            waterTitle = "Không cần tưới"
-            waterSub = "Độ ẩm đất hiện tại đủ cho cây"
-            if (temp > 32.0) {
-                analysisText = "Độ ẩm đất đang ở mức tốt, tuy nhiên thời tiết khá oi bức ($temp°C), cần chú ý theo dõi."
-            } else {
-                analysisText = "Trạng thái lý tưởng. Khí hậu mát mẻ, độ ẩm đất ổn định."
-            }
-        }
-
-        // --- 3. HỆ THỐNG LUẬT PHÂN TÍCH DINH DƯỠNG NPK (FERTILIZER & CROP LOGIC) ---
-        val listThieu = ArrayList<String>()
-        if (n < 60) listThieu.add("Nitơ (Đạm)")
-        if (p < 60) listThieu.add("Phốt pho (Lân)")
-        if (k < 60) listThieu.add("Kali")
-
-        if (listThieu.isNotEmpty()) {
-            // Kịch bản đất bị thiếu chất
-            fertilizerTitle = "CẦN BÓN PHÂN"
-
-            val goiyPhan = ArrayList<String>()
-            if (n < 60) goiyPhan.add("phân Đạm")
-            if (p < 60) goiyPhan.add("phân Lân")
-            if (k < 60) goiyPhan.add("phân Kali")
-
-            fertilizerSub = "Bổ sung ngay: ${goiyPhan.joinToString(" + ")}"
-            analysisText += " Hàm lượng ${listThieu.joinToString(", ")} trong đất đang ở mức báo động thấp, cây có nguy cơ còi cọc."
-
-            // Đất thiếu chất thì đổi loại cây trồng phù hợp với đất nghèo dinh dưỡng
-            cropType = "Khoai lang, Sắn, Cây họ Đậu"
-        } else {
-            // Đất giàu dinh dưỡng
-            if (soilMoist in 40..80) {
-                fertilizerTitle = "Đất rất màu mỡ"
-                fertilizerSub = "Chỉ số NPK đạt trạng thái cân bằng lý tưởng"
-                cropType = "Cà chua, Ớt, Rau cải, Cây ăn quả"
-            }
-        }
-
-        // --- 4. ĐỒNG BỘ HIỂN THỊ LÊN CÁC ID GIAO DIỆN MỚI XỊN SÒ ---
+    private fun renderAiRecommendation(result: AiResult) {
+        if (!isAdded) return
         val viewLocal = view ?: return
 
-        // Khối text phân tích chung
-        viewLocal.findViewById<TextView>(R.id.tvAiAnalysisClean).text = analysisText
+        // 1. Đồng bộ các khối phân tích và khuyến nghị (ID cũ giữ nguyên)
+        viewLocal.findViewById<TextView>(R.id.tvAiAnalysisClean).text = result.analysisText
+        viewLocal.findViewById<TextView>(R.id.tvRecWaterTitle).text = result.waterTitle
+        viewLocal.findViewById<TextView>(R.id.tvRecWaterSub).text = result.waterSub
+        viewLocal.findViewById<TextView>(R.id.tvRecFertilizerTitle).text = result.fertilizerTitle
+        viewLocal.findViewById<TextView>(R.id.tvRecFertilizerSub).text = result.fertilizerSub
+        viewLocal.findViewById<TextView>(R.id.tvRecCropType).text = result.cropType
 
-        // Cập nhật text lời khuyên cho Khối Nước
-        viewLocal.findViewById<TextView>(R.id.tvRecWaterTitle).text = waterTitle
-        viewLocal.findViewById<TextView>(R.id.tvRecWaterSub).text = waterSub
+        // 2. CẬP NHẬT TRẠNG THÁI CHỮ ĐÁNH GIÁ NPK (MỚI)
+        // Các TextView hiển thị text "Trung bình", "Thấp", "Tốt" nằm dưới các vòng khuyên tròn NPK
+        // Bạn có thể tìm dựa theo ID text hoặc cấu trúc layout của bạn, ví dụ:
+        //val tvStatusN = viewLocal.findViewById<TextView>(R.id.lblN)?.parent as? android.widget.LinearLayout
+        // Để gán nhanh và chính xác nhất theo file layout mẫu trước, ta ép text trực tiếp:
+        // Bạn hãy chỉnh các TextView mức độ bằng cách bổ sung ID hoặc tìm text tương ứng:
 
-        // Cập nhật text lời khuyên cho Khối Phân bón
-        viewLocal.findViewById<TextView>(R.id.tvRecFertilizerTitle).text = fertilizerTitle
-        viewLocal.findViewById<TextView>(R.id.tvRecFertilizerSub).text = fertilizerSub
-
-        // Cập nhật text Khối Loại cây phù hợp
-        viewLocal.findViewById<TextView>(R.id.tvRecCropType).text = cropType
-
-        // --- 5. ĐỔI MÀU SẮC CHỮ ĐỂ CẢNH BÁO THEO QUY TẮC (Tùy chọn nâng cao) ---
-        val tvSoilStatus = viewLocal.findViewById<TextView>(R.id.tvSoilStatusText)
+        // Mẹo hiển thị: Lồng chuỗi Soil Score vào tiêu đề hệ thống trực tuyến cho cực xịn
+        val tvStatusText = viewLocal.findViewById<TextView>(R.id.tvSoilStatusText)
         val tvSoilAdvice = viewLocal.findViewById<TextView>(R.id.tvSoilBottomAdvice)
 
-        if (soilMoist < 40 || soilMoist > 80) {
-            tvSoilStatus.text = if (soilMoist < 40) "Đất quá khô!" else "Đất úng nước!"
-            tvSoilStatus.setTextColor(Color.parseColor("#D84315")) // Màu đỏ cam cảnh báo
-            tvSoilAdvice.text = "Cần tác động vật lý để bảo vệ rễ cây!"
-            tvSoilAdvice.setBackgroundColor(Color.parseColor("#FFEBEE")) // Nền hồng nhạt nguy hiểm
+        // Cập nhật text kèm điểm số đất thực tế
+        tvStatusText.text = "${result.soilStatusText} (${result.soilScore}đ - ${result.soilScoreEvaluation})"
+
+        if (result.isWarning) {
+            tvStatusText.setTextColor(Color.parseColor("#D84315"))
+            tvSoilAdvice.text = "Cảnh báo hệ thống: Cần can thiệp nông học khẩn cấp!"
+            tvSoilAdvice.setBackgroundColor(Color.parseColor("#FFEBEE"))
             tvSoilAdvice.setTextColor(Color.RED)
         } else {
-            tvSoilStatus.text = "Độ ẩm tốt"
-            tvSoilStatus.setTextColor(Color.parseColor("#2E7D32")) // Màu xanh lá an toàn
-            tvSoilAdvice.text = "Độ ẩm đất hiện tại phù hợp cho sự phát triển."
-            tvSoilAdvice.setBackgroundColor(Color.parseColor("#E8F5E9")) // Nền xanh lá nhạt
+            tvStatusText.setTextColor(Color.parseColor("#2E7D32"))
+            tvSoilAdvice.text = "Hệ thống an toàn. Đất đáp ứng tốt các tiêu chí phát triển."
+            tvSoilAdvice.setBackgroundColor(Color.parseColor("#E8F5E9"))
             tvSoilAdvice.setTextColor(Color.parseColor("#2E7D32"))
         }
     }
 
     private fun updateRadarChart(n: Int, p: Int, k: Int) {
-        val entries = ArrayList<com.github.mikephil.charting.data.RadarEntry>()
+        val entries = arrayListOf(
+            RadarEntry((n / 2f)),
+            RadarEntry((p / 2f)),
+            RadarEntry((k / 2f))
+        )
 
-        // Quy chuẩn tỷ lệ % dinh dưỡng (map từ giá trị 0-200 sang mức 100% đồ thị)
-        entries.add(com.github.mikephil.charting.data.RadarEntry((n / 2.0).toFloat()))
-        entries.add(com.github.mikephil.charting.data.RadarEntry((p / 2.0).toFloat()))
-        entries.add(com.github.mikephil.charting.data.RadarEntry((k / 2.0).toFloat()))
-
-        val dataset = com.github.mikephil.charting.data.RadarDataSet(entries, "Dinh dưỡng").apply {
-            color = Color.parseColor("#4CAF50")
-            fillColor = Color.parseColor("#81C784")
+        val dataset = RadarDataSet(entries, "").apply {
+            color = Color.parseColor("#6FCF97")
+            fillColor = Color.parseColor("#6FCF97")
+            fillAlpha = 120
             setDrawFilled(true) // Tô màu vùng bên trong mạng nhện
             lineWidth = 2f
-            valueTextSize = 8f
+            setDrawHighlightIndicators(false)
+            setDrawValues(false)
         }
 
         radarChartNPK.apply {
-            data = com.github.mikephil.charting.data.RadarData(dataset)
+            data = RadarData(dataset)
             description.isEnabled = false
-            xAxis.valueFormatter = com.github.mikephil.charting.formatter.IndexAxisValueFormatter(arrayOf("N", "P", "K"))
-            yAxis.axisMinimum = 0f
-            yAxis.axisMaximum = 100f // Ngưỡng kịch khung 100%
+            legend.isEnabled = false
+            setExtraOffsets(16f, 16f, 16f, 16f)
+            xAxis.apply {
+                valueFormatter = IndexAxisValueFormatter(arrayOf("N", "P", "K"))
+                textSize = 14f
+                textColor = Color.parseColor("#F4A300")
+                axisLineColor = Color.TRANSPARENT
+                yOffset = 10f
+            }
+            yAxis.apply {
+                axisMinimum = 0f
+                axisMaximum = 100f
+                labelCount = 3
+                setDrawLabels(false)
+                gridColor = Color.parseColor("#E0E0E0")
+                axisLineColor = Color.TRANSPARENT
+            }
+            webLineWidth = 1f
+            webColor = Color.parseColor("#EAEAEA")
+            webLineWidthInner = 1f
+            webColorInner = Color.parseColor("#F0F0F0")
+            webAlpha = 80
             invalidate()
         }
     }
@@ -409,22 +372,34 @@ class HomeFragment : Fragment() {
 
     private fun updateNStatus(nPercent: Int) {
         when {
-            nPercent >= 90 -> {
+            nPercent < 12.5 -> {
+                tvStatusN.text = "Nitơ (N)\nRất thiếu"
+                tvStatusN.setTextColor(
+                    Color.parseColor("#D32F2F")
+                )
+            }
+            nPercent < 25 -> {
+                tvStatusN.text = "Nitơ (N)\nThiếu"
+                tvStatusN.setTextColor(
+                    Color.parseColor("#F57C00")
+                )
+            }
+            nPercent < 50 -> {
+                tvStatusN.text = "Nitơ (N)\nTrung bình"
+                tvStatusN.setTextColor(
+                    Color.parseColor("#FBC02D")
+                )
+            }
+            nPercent < 75 -> {
                 tvStatusN.text = "Nitơ (N)\nTốt"
                 tvStatusN.setTextColor(
                     Color.parseColor("#4CAF50")
                 )
             }
-            nPercent >= 60 -> {
-                tvStatusN.text = "Nitơ (N)\nTrung bình"
-                tvStatusN.setTextColor(
-                    Color.parseColor("#FFC107")
-                )
-            }
             else -> {
-                tvStatusN.text = "Nitơ (N)\nThiếu"
+                tvStatusN.text = "Nitơ (N)\nRất giàu"
                 tvStatusN.setTextColor(
-                    Color.parseColor("#F44336")
+                    Color.parseColor("#2E7D32")
                 )
             }
         }
@@ -432,22 +407,34 @@ class HomeFragment : Fragment() {
 
     private fun updatePStatus(nPercent: Int) {
         when {
-            nPercent >= 90 -> {
+            nPercent < 5 -> {
+                tvStatusP.text = "Phốt Pho (P)\nRất thiếu"
+                tvStatusP.setTextColor(
+                    Color.parseColor("#D32F2F")
+                )
+            }
+            nPercent < 12.5 -> {
+                tvStatusP.text = "Phốt Pho (P)\nThiếu"
+                tvStatusP.setTextColor(
+                    Color.parseColor("#F57C00")
+                )
+            }
+            nPercent < 25 -> {
+                tvStatusP.text = "Phốt Pho (P)\nTrung bình"
+                tvStatusP.setTextColor(
+                    Color.parseColor("#FBC02D")
+                )
+            }
+            nPercent < 50 -> {
                 tvStatusP.text = "Phốt Pho (P)\nTốt"
                 tvStatusP.setTextColor(
                     Color.parseColor("#4CAF50")
                 )
             }
-            nPercent >= 60 -> {
-                tvStatusP.text = "Phốt Pho (P)\nTrung bình"
-                tvStatusP.setTextColor(
-                    Color.parseColor("#FFC107")
-                )
-            }
             else -> {
-                tvStatusP.text = "Phốt Pho (P)\nThiếu"
+                tvStatusP.text = "Phốt Pho (P)\nRất giàu"
                 tvStatusP.setTextColor(
-                    Color.parseColor("#F44336")
+                    Color.parseColor("#2E7D32")
                 )
             }
         }
@@ -455,22 +442,34 @@ class HomeFragment : Fragment() {
 
     private fun updateKStatus(nPercent: Int) {
         when {
-            nPercent >= 90 -> {
+            nPercent < 20 -> {
+                tvStatusK.text = "Kali (K)\nRất thiếu"
+                tvStatusK.setTextColor(
+                    Color.parseColor("#D32F2F")
+                )
+            }
+            nPercent < 40 -> {
+                tvStatusK.text = "Kali (K)\nThiếu"
+                tvStatusK.setTextColor(
+                    Color.parseColor("#F57C00")
+                )
+            }
+            nPercent < 60 -> {
+                tvStatusK.text = "Kali (K)\nTrung bình"
+                tvStatusK.setTextColor(
+                    Color.parseColor("#FBC02D")
+                )
+            }
+            nPercent < 90 -> {
                 tvStatusK.text = "Kali (K)\nTốt"
                 tvStatusK.setTextColor(
                     Color.parseColor("#4CAF50")
                 )
             }
-            nPercent >= 60 -> {
-                tvStatusK.text = "Kali (K)\nTrung bình"
-                tvStatusK.setTextColor(
-                    Color.parseColor("#FFC107")
-                )
-            }
             else -> {
-                tvStatusK.text = "Kali (K)\nThiếu"
+                tvStatusK.text = "Kali (K)\nRất giàu"
                 tvStatusK.setTextColor(
-                    Color.parseColor("#F44336")
+                    Color.parseColor("#2E7D32")
                 )
             }
         }
