@@ -31,8 +31,8 @@ import com.google.firebase.database.*
 class ControlFragment : Fragment() {
 
     private val database = FirebaseDatabase.getInstance()
-    private val controlRef = database.getReference("smart_agriculture/control")
-    private val stateRef = database.getReference("smart_agriculture/state")
+    private val controlRef = database.getReference(FirebasePaths.CONTROL)
+    private val stateRef = database.getReference(FirebasePaths.STATE)
     private var controlListener: ValueEventListener? = null
     private var stateListener: ValueEventListener? = null
 

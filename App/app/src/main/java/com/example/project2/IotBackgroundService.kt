@@ -15,7 +15,7 @@ import com.google.firebase.database.*
 class IoTBackgroundService : Service() {
 
     private val database = FirebaseDatabase.getInstance()
-    private val myRef = database.getReference("iot_project")
+    private val myRef = database.getReference(FirebasePaths.ROOT)
     private var valueEventListener: ValueEventListener? = null
 
     private val CHANNEL_ID = "IoT_Monitor_Channel"
@@ -52,11 +52,11 @@ class IoTBackgroundService : Service() {
         valueEventListener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 if (snapshot.hasChild("temperature_threshold")) {
-                    tempThreshold = snapshot.child("temperature_threshold").getValue(Double::class.java) ?: 35.0
+                    tempThreshold = snapshot.child("control").child("temp_threshold").getValue(Double::class.java) ?: 35.0
                 }
 
                 if (snapshot.hasChild("temperature")) {
-                    val currentTemp = snapshot.child("temperature").getValue(Double::class.java) ?: 0.0
+                    val currentTemp = snapshot.child("air_temperature").getValue(Double::class.java) ?: 0.0
 
                     // Cập nhật nhiệt độ liên tục lên thanh thông báo thường trực
                     updateForegroundNotification("Nhiệt độ hiện tại: $currentTemp °C")

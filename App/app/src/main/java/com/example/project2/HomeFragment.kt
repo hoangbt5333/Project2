@@ -71,7 +71,7 @@ class HomeFragment : Fragment() {
 
     // Kết nối Firebase
     private val database = FirebaseDatabase.getInstance()
-    private val myRef = database.getReference("smart_agriculture")
+    private val myRef = database.getReference(FirebasePaths.ROOT)
     private var valueEventListener: ValueEventListener? = null
 
     // Kết nối Room Database (Phục vụ lưu lịch sử chống spam)
