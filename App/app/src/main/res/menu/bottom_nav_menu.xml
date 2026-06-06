@@ -5,9 +5,9 @@
         android:icon="@android:drawable/ic_menu_today"
         android:title="Giám Sát" />
     <item
-        android:id="@+id/nav_history"
+        android:id="@+id/nav_insight"
         android:icon="@android:drawable/ic_menu_sort_by_size"
-        android:title="Lịch Sử" />
+        android:title="AI" />
     <item
         android:id="@+id/nav_control"
         android:icon="@android:drawable/ic_menu_preferences"

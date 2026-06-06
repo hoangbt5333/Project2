@@ -45,7 +45,7 @@ class MainActivity : AppCompatActivity() {
                     viewPager.currentItem = 0 // Cuộn về Fragment số 0
                     true
                 }
-                R.id.nav_history -> {
+                R.id.nav_insight -> {
                     viewPager.currentItem = 1 // Cuộn về Fragment số 1
                     true
                 }
@@ -64,7 +64,7 @@ class MainActivity : AppCompatActivity() {
                 // Đồng bộ hóa Item ID được chọn trên thanh BottomNav dựa theo vị trí vuốt dừng lại
                 when (position) {
                     0 -> bottomNavigation.selectedItemId = R.id.nav_home
-                    1 -> bottomNavigation.selectedItemId = R.id.nav_history
+                    1 -> bottomNavigation.selectedItemId = R.id.nav_insight
                     2 -> bottomNavigation.selectedItemId = R.id.nav_control
                 }
             }

@@ -1,17 +1,27 @@
 package com.example.project2.domain.ai
 
+enum class FarmDecision {
+    NORMAL,
+    NEED_WATER,
+    STOP_WATERING,
+    COOLING_NEEDED,
+    NEED_FERTILIZER,
+    SENSOR_ERROR
+}
+
 data class AiResult(
-    val analysisText: String,
-    val waterTitle: String,
-    val waterSub: String,
-    val fertilizerTitle: String,
-    val fertilizerSub: String,
-    val cropType: String,
-    val soilStatusText: String,
-    val isWarning: Boolean,
     val soilScore: Int,
-    val soilScoreEvaluation: String,
+    val waterScore: Int,
+    val climateScore: Int,
+    val nutrientScore: Int,
+    val confidence: Int,
+    val decision: FarmDecision,
+    val soilStatusText: String,
+    val summary: String,
+    val recommendation: String,
+    val cropSuggestion: String,
     val statusN: String,
     val statusP: String,
-    val statusK: String
+    val statusK: String,
+    val isWarning: Boolean
 )
