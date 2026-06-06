@@ -1,8 +1,9 @@
-package com.example.project2
+package com.example.project2.data.local
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import com.example.project2.ThongSoEntity
 import kotlinx.coroutines.flow.Flow
 
 // ===== POJO kết quả cho các truy vấn thống kê =====

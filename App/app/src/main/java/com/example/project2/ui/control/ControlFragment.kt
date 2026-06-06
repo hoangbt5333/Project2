@@ -1,4 +1,4 @@
-package com.example.project2
+package com.example.project2.ui.control
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -9,6 +9,8 @@ import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import com.example.project2.FirebasePaths
+import com.example.project2.R
 import com.google.firebase.database.*
 
 /**

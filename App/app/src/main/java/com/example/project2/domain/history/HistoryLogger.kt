@@ -1,4 +1,11 @@
-package com.example.project2
+package com.example.project2.domain.history
+
+import com.example.project2.data.local.AlertDao
+import com.example.project2.data.local.AlertEntity
+import com.example.project2.data.local.AlertTypes
+import com.example.project2.data.local.WateringDao
+import com.example.project2.data.local.WateringEntity
+import com.example.project2.domain.ai.AiResult
 
 /**
  * Sinh log cảnh báo từ kết quả AI và ghi lịch sử tưới.

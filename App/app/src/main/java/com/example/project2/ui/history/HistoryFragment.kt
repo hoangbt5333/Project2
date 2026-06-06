@@ -1,4 +1,4 @@
-package com.example.project2
+package com.example.project2.ui.history
 
 import android.graphics.Color
 import android.os.Bundle
@@ -9,6 +9,13 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.project2.data.local.AlertTypes
+import com.example.project2.data.local.AppDatabase
+import com.example.project2.data.local.DailyAi
+import com.example.project2.data.local.DailyScore
+import com.example.project2.R
+import com.example.project2.data.local.StatusCount
+import com.example.project2.data.local.TypeCount
 import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.components.XAxis

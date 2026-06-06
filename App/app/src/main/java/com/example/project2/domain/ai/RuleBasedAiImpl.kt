@@ -1,4 +1,4 @@
-package com.example.project2
+package com.example.project2.domain.ai
 
 class RuleBasedAiImpl : AiRecommendationEngine {
 

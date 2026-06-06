@@ -1,4 +1,4 @@
-package com.example.project2
+package com.example.project2.data.local
 
 import android.content.Context
 import androidx.room.Database
@@ -6,6 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.example.project2.ThongSoEntity
 
 // version 1 -> 2: thêm 2 cột vào lich_su_moi_truong + 2 bảng mới (canh_bao, tuoi).
 // Đồ án nên dùng fallbackToDestructiveMigration cho gọn (mất dữ liệu cũ khi nâng cấp schema).

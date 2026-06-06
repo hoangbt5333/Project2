@@ -1,4 +1,4 @@
-package com.example.project2
+package com.example.project2.ui.home
 
 import android.graphics.Color
 import android.os.Bundle
@@ -10,6 +10,14 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.example.project2.domain.ai.AiRecommendationEngine
+import com.example.project2.domain.ai.AiResult
+import com.example.project2.data.local.AppDatabase
+import com.example.project2.FirebasePaths
+import com.example.project2.domain.history.HistoryLogger
+import com.example.project2.R
+import com.example.project2.domain.ai.RuleBasedAiImpl
+import com.example.project2.ThongSoEntity
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.charts.RadarChart
 import com.github.mikephil.charting.components.XAxis

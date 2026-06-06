@@ -1,4 +1,4 @@
-package com.example.project2
+package com.example.project2.ui.history
 
 import android.graphics.Color
 import android.view.LayoutInflater
@@ -6,6 +6,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.project2.data.local.AlertEntity
+import com.example.project2.data.local.AlertTypes
+import com.example.project2.R
+import com.example.project2.ThongSoEntity
+import com.example.project2.data.local.WateringEntity
 import java.text.SimpleDateFormat
 import java.util.*
 
