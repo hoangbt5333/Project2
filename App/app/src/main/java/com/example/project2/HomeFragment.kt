@@ -189,35 +189,30 @@ class HomeFragment : Fragment() {
 
                 val now = System.currentTimeMillis()
 
-                lifecycleScope.launch(Dispatchers.IO) {
-                    // Luu them soilScore + soilStatusText (phuc vu Muc 2 va Muc 7)
-                    roomDb.thongSoDao().insert(
-                        ThongSoEntity(
-                            airTemperature = temp, airHumidity = humid, soilMoisture = soilMoist,
-                            npkN = n, npkP = p, npkK = k,
-                            soilScore = aiResult.soilScore,
-                            soilStatusText = aiResult.soilStatusText,
-                            timestamp = now
-                        )
-                    )
-                    // Sinh log canh bao (Muc 1) - da chong spam 10 phut/loai
+                // Log cảnh báo vẫn nên chạy mỗi lần có dữ liệu mới,
+                // vì HistoryLogger đã có chống spam cảnh báo riêng.
+                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                     HistoryLogger.evaluateAndLog(
-                        roomDb.alertDao(), aiResult, soilMoist, temp, n, p, k, now
+                        roomDb.alertDao(),
+                        aiResult,
+                        soilMoist,
+                        temp,
+                        n,
+                        p,
+                        k,
+                        now
                     )
                 }
 
-                // 4. THUẬT TOÁN CHỐNG SPAM GHI LỊCH SỬ VÀO ROOM
-                val currentTime = System.currentTimeMillis()
-                val isTimePassed = (currentTime - lastSavedTime) >= TIME_INTERVAL_LIMIT
+                // Chỉ lưu lịch sử môi trường khi đủ điều kiện chống spam.
+                val isTimePassed = (now - lastSavedTime) >= TIME_INTERVAL_LIMIT
                 val isSoilChangedSignificant = abs(soilMoist - lastSavedSoilMoist) >= DELTA_SOIL_LIMIT
 
                 if (isTimePassed || isSoilChangedSignificant) {
                     lastSavedSoilMoist = soilMoist
-                    lastSavedTime = currentTime
+                    lastSavedTime = now
 
-                    // Ghi vào Room database bằng Coroutine theo thói quen tối ưu của bạn
-                    viewLifecycleOwner.lifecycleScope.launch {
-                        // Tìm đoạn này trong HomeFragment.kt và cập nhật lại:
+                    viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                         val entity = ThongSoEntity(
                             airTemperature = temp,
                             airHumidity = humid,
@@ -225,8 +220,11 @@ class HomeFragment : Fragment() {
                             npkN = n,
                             npkP = p,
                             npkK = k,
-                            timestamp = currentTime
+                            soilScore = aiResult.soilScore,
+                            soilStatusText = aiResult.soilStatusText,
+                            timestamp = now
                         )
+
                         roomDb.thongSoDao().insert(entity)
                     }
                 }
