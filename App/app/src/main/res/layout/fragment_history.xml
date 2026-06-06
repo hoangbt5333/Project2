@@ -1,83 +1,81 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F4F6F8"
     android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="12dp">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="📈 Phân Tích Xu Hướng Thời Gian Thực"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:textColor="#1A237E"
-            android:layout_marginBottom="16dp"/>
-
-        <androidx.cardview.widget.CardView
+        <!-- MUC 1: Timeline canh bao -->
+        <TextView style="@style/HistorySectionTitle" android:text="Lich su canh bao" />
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvAlerts"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="4dp">
+            android:layout_marginBottom="20dp" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="12dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="📊 Biểu đồ Khí hậu &amp; Độ ẩm đất"
-                    android:textStyle="bold"
-                    android:textColor="#555555"
-                    android:layout_marginBottom="8dp"/>
-
-                <com.github.mikephil.charting.charts.LineChart
-                    android:id="@+id/chartClimate"
-                    android:layout_width="match_parent"
-                    android:layout_height="220dp"
-                    android:background="#FFFFFF"/>
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
-        <androidx.cardview.widget.CardView
+        <!-- MUC 2: Nhat ky AI -->
+        <TextView style="@style/HistorySectionTitle" android:text="Nhat ky AI (AI Analysis History)" />
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvAiDaily"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="4dp">
+            android:layout_marginBottom="20dp" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="12dp">
+        <!-- MUC 3: Thong ke loai canh bao trong tuan -->
+        <TextView style="@style/HistorySectionTitle" android:text="So lan canh bao trong tuan" />
+        <com.github.mikephil.charting.charts.BarChart
+            android:id="@+id/chartAlertTypes"
+            android:layout_width="match_parent"
+            android:layout_height="220dp"
+            android:layout_marginBottom="20dp" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🧪 Biểu đồ Biến động Dinh dưỡng (NPK)"
-                    android:textStyle="bold"
-                    android:textColor="#555555"
-                    android:layout_marginBottom="8dp"/>
+        <!-- MUC 4: Phan bo trang thai dat 30 ngay -->
+        <TextView style="@style/HistorySectionTitle" android:text="Trang thai dat trong 30 ngay" />
+        <com.github.mikephil.charting.charts.PieChart
+            android:id="@+id/chartSoilStatus"
+            android:layout_width="match_parent"
+            android:layout_height="240dp"
+            android:layout_marginBottom="20dp" />
 
-                <com.github.mikephil.charting.charts.LineChart
-                    android:id="@+id/chartNPK"
-                    android:layout_width="match_parent"
-                    android:layout_height="220dp"
-                    android:background="#FFFFFF"/>
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
+        <!-- MUC 5: Lich su tuoi nuoc -->
+        <TextView style="@style/HistorySectionTitle" android:text="Lich su tuoi nuoc" />
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvWatering"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp" />
+
+        <!-- MUC 6: Bang du lieu lich su -->
+        <TextView style="@style/HistorySectionTitle" android:text="Bang du lieu lich su" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingVertical="6dp"
+            android:paddingHorizontal="12dp"
+            android:background="#ECEFF1">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.2" android:text="Time" android:textStyle="bold" android:textSize="13sp" />
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="Moisture" android:textStyle="bold" android:textSize="13sp" />
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.3" android:gravity="end" android:text="NPK" android:textStyle="bold" android:textSize="13sp" />
+        </LinearLayout>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvDataTable"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp" />
+
+        <!-- MUC 7: Diem suc khoe dat theo ngay -->
+        <TextView style="@style/HistorySectionTitle" android:text="Diem suc khoe dat theo ngay (7 ngay)" />
+        <com.github.mikephil.charting.charts.BarChart
+            android:id="@+id/chartHealthScore"
+            android:layout_width="match_parent"
+            android:layout_height="220dp"
+            android:layout_marginBottom="24dp" />
 
     </LinearLayout>
-</ScrollView>
+</androidx.core.widget.NestedScrollView>

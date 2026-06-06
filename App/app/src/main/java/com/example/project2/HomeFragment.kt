@@ -22,6 +22,7 @@ import com.github.mikephil.charting.data.RadarEntry
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.google.firebase.database.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -185,6 +186,25 @@ class HomeFragment : Fragment() {
                 // 3. CHẠY BỘ NÃO AI
                 val aiResult = aiEngine.analyze(soilMoist, temp, humid, n, p, k)
                 renderAiRecommendation(aiResult)
+
+                val now = System.currentTimeMillis()
+
+                lifecycleScope.launch(Dispatchers.IO) {
+                    // Luu them soilScore + soilStatusText (phuc vu Muc 2 va Muc 7)
+                    roomDb.thongSoDao().insert(
+                        ThongSoEntity(
+                            airTemperature = temp, airHumidity = humid, soilMoisture = soilMoist,
+                            npkN = n, npkP = p, npkK = k,
+                            soilScore = aiResult.soilScore,
+                            soilStatusText = aiResult.soilStatusText,
+                            timestamp = now
+                        )
+                    )
+                    // Sinh log canh bao (Muc 1) - da chong spam 10 phut/loai
+                    HistoryLogger.evaluateAndLog(
+                        roomDb.alertDao(), aiResult, soilMoist, temp, n, p, k, now
+                    )
+                }
 
                 // 4. THUẬT TOÁN CHỐNG SPAM GHI LỊCH SỬ VÀO ROOM
                 val currentTime = System.currentTimeMillis()

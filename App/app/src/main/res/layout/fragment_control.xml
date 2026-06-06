@@ -1,18 +1,131 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<!-- Layout mẫu cho phần Điều khiển. Đặt tại res/layout/fragment_control.xml -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ControlFragment">
+    android:fillViewport="true"
+    android:background="#F5F7FA">
 
-    <!-- TODO: Update blank fragment layout -->
-
-    <TextView
-        android:id="@+id/textView2"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Màn hình điều khiển"
-        android:textAlignment="center"
-        android:textSize="34sp" />
+        android:orientation="vertical"
+        android:padding="16dp">
 
-</FrameLayout>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Bảng điều khiển thiết bị"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#1B5E20"
+            android:paddingBottom="12dp" />
+
+        <!-- CARD: Chế độ hoạt động -->
+        <LinearLayout style="@style/CardLike"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#FFFFFF"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
+
+            <Switch
+                android:id="@+id/switchAutoMode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Chế độ tự động (Auto)"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvModeHint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Đang ở chế độ THỦ CÔNG: bạn tự bật/tắt thiết bị."
+                android:textSize="13sp"
+                android:textColor="#607D8B"
+                android:paddingTop="6dp" />
+        </LinearLayout>
+
+        <!-- CARD: Điều khiển thiết bị -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#FFFFFF"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Thiết bị"
+                android:textStyle="bold"
+                android:textColor="#37474F"
+                android:paddingBottom="8dp" />
+
+            <Switch
+                android:id="@+id/switchPump"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="\uD83D\uDCA7 Máy bơm nước"
+                android:textSize="16sp"
+                android:paddingVertical="8dp" />
+
+            <Switch
+                android:id="@+id/switchFan"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="\uD83C\uDF00 Quạt / mái che"
+                android:textSize="16sp"
+                android:paddingVertical="8dp" />
+
+            <TextView
+                android:id="@+id/tvPumpState"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="\u26AA Chưa nhận phản hồi từ thiết bị"
+                android:textSize="14sp"
+                android:paddingTop="8dp" />
+        </LinearLayout>
+
+        <!-- CARD: Ngưỡng tự động -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#FFFFFF"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ngưỡng tự động hoá"
+                android:textStyle="bold"
+                android:textColor="#37474F"
+                android:paddingBottom="8dp" />
+
+            <TextView
+                android:id="@+id/tvSoilThresholdValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ngưỡng bật bơm: 40 %" />
+            <SeekBar
+                android:id="@+id/seekSoilThreshold"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp" />
+
+            <TextView
+                android:id="@+id/tvTempThresholdValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ngưỡng nhiệt độ: 35 °C" />
+            <SeekBar
+                android:id="@+id/seekTempThreshold"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

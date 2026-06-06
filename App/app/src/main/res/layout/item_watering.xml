@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="12dp"
+    android:gravity="center_vertical">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvWaterMode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🤖 AUTO WATERING"
+            android:textStyle="bold"
+            android:textSize="15sp" />
+
+        <TextView
+            android:id="@+id/tvWaterTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="04/06 08:00"
+            android:textSize="12sp"
+            android:textColor="#90A4AE" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvWaterDuration"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Duration: 30s"
+        android:textSize="13sp"
+        android:textColor="#1565C0" />
+</LinearLayout>
