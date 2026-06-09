@@ -11,6 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.project2.R
 import com.example.project2.data.local.SensorLogEntity
+import com.example.project2.domain.ai.AiResult
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -67,6 +68,7 @@ class AiInsightFragment : Fragment(R.layout.fragment_ai_insight) {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { state ->
                     renderLatestInsight(state.latestLog)
+                    renderAiInsight(state.latestAiResult)
                     renderSummary(
                         averageScore = state.averageScore,
                         warningCount = state.warningCount
@@ -92,6 +94,31 @@ class AiInsightFragment : Fragment(R.layout.fragment_ai_insight) {
         txtLatestDecision.setTextColor(decisionColor(log.decision))
         txtLatestSummary.text = log.aiSummary
         txtLatestRecommendation.text = log.recommendation
+    }
+
+    private fun renderAiInsight(result: AiResult?) {
+        if (result == null) {
+            // txtLatestSummary.text = "Chưa có dữ liệu AI."
+            return
+        }
+
+        // Ví dụ nếu bạn có các TextView tương ứng:
+        // txtInsightTitle.text = result.insightTitle
+        // txtLatestScore.text = "${result.soilScore}/100"
+        // txtLatestDecision.text = result.decision.name
+        // txtLatestSummary.text = result.insightAnalysis
+        // txtLatestRecommendation.text = result.immediateActions.joinToString("\n") { "• $it" }
+
+        val cropText = result.cropSuggestions.joinToString("\n") {
+            "• ${it.name}: ${it.score}% - ${it.reason}"
+        }
+
+        val notRecommendedText = result.notRecommendedCrops.joinToString("\n") {
+            "• ${it.name}: ${it.score}% - ${it.reason}"
+        }
+
+        // txtCropSuggestions.text = cropText
+        // txtNotRecommendedCrops.text = notRecommendedText
     }
 
     private fun renderSummary(averageScore: Int, warningCount: Int) {

@@ -67,7 +67,7 @@ fun createSensorLogEntity(
         confidence = aiResult.confidence,
         decision = aiResult.decision.name,
         soilStatusText = aiResult.soilStatusText,
-        aiSummary = aiResult.summary,
-        recommendation = aiResult.recommendation
+        aiSummary = aiResult.insightAnalysis,
+        recommendation = aiResult.immediateActions.joinToString(", ")
     )
 }

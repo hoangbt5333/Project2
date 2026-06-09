@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.project2.data.local.AppDatabase
 import com.example.project2.data.local.SensorLogDao
+import com.example.project2.data.local.toSensorData
+import com.example.project2.domain.ai.SmartFarmAi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,7 +15,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 class AiInsightViewModel(
-    private val sensorLogDao: SensorLogDao
+    private val sensorLogDao: SensorLogDao,
+    private val SmartFarmAi: SmartFarmAi = SmartFarmAi()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AiInsightUiState())
@@ -39,8 +42,13 @@ class AiInsightViewModel(
                     it.decision != "NORMAL"
                 }
 
+                val latestAiResult = latest?.let {
+                    SmartFarmAi.analyze(it.toSensorData())
+                }
+
                 AiInsightUiState(
                     latestLog = latest,
+                    latestAiResult = latestAiResult,
                     recentLogs = recent,
                     averageScore = averageScore,
                     warningCount = warningCount
