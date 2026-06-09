@@ -3,7 +3,7 @@
 #include <FirebaseESP32.h>
 #include "secrets.h"
 
-// ===================== SENSOR PINS =====================
+// ================= SENSOR =================
 #define DHTPIN 23
 #define DHTTYPE DHT11
 
@@ -12,17 +12,15 @@
 #define POT_P_PIN 32
 #define POT_K_PIN 33
 
-// ===================== RELAY PINS =====================
-// Relay 1: bơm / tưới nước
-// Relay 2: quạt / thiết bị phụ / test relay
+// ================= RELAY =================
 #define RELAY_PUMP_PIN 26
 #define RELAY_FAN_PIN 27
 
-// Nhiều module relay 5V kích mức LOW.
-// Nếu relay của bạn bị ngược logic, đổi true thành false.
+// Nhiều relay module kích LOW.
+// Nếu relay chạy ngược thì đổi true -> false.
 const bool RELAY_ACTIVE_LOW = true;
 
-// ===================== FIREBASE OBJECTS =====================
+// ================= OBJECTS =================
 DHT dht(DHTPIN, DHTTYPE);
 
 FirebaseData firebaseDataWrite;
@@ -31,22 +29,19 @@ FirebaseData firebaseDataRead;
 FirebaseAuth auth;
 FirebaseConfig config;
 
-// ===================== TIMING =====================
+// ================= TIME =================
 unsigned long lastSendTime = 0;
 const unsigned long sendInterval = 3000;
 
-// ===================== NPK =====================
+// ================= NPK =================
 const int NPK_MAX_VALUE = 200;
 
-// ===================== SOIL CALIBRATION =====================
-// Bạn nên đo lại bằng Serial Monitor.
-// Giá trị tham khảo:
-// - Cảm biến khô: raw cao
-// - Cảm biến ướt/nước: raw thấp
+// ================= SOIL CALIBRATION =================
+// Chỉnh lại sau khi xem Serial Monitor.
 const int SOIL_DRY_RAW = 3200;
 const int SOIL_WET_RAW = 1500;
 
-// ===================== CONTROL DEFAULT =====================
+// ================= CONTROL =================
 bool autoMode = true;
 bool manualPump = false;
 bool manualFan = false;
@@ -57,7 +52,7 @@ float tempThreshold = 35.0;
 bool pumpRunning = false;
 bool fanRunning = false;
 
-// ===================== RELAY HELPERS =====================
+// ================= RELAY HELPERS =================
 void writeRelay(int pin, bool on) {
   if (RELAY_ACTIVE_LOW) {
     digitalWrite(pin, on ? LOW : HIGH);
@@ -71,7 +66,7 @@ void turnAllRelayOff() {
   writeRelay(RELAY_FAN_PIN, false);
 }
 
-// ===================== SENSOR HELPERS =====================
+// ================= SENSOR HELPERS =================
 int readAnalogAverage(int pin, int samples = 10) {
   long total = 0;
 
@@ -93,42 +88,54 @@ int mapNpkValue(int rawValue) {
   return constrain(value, 0, NPK_MAX_VALUE);
 }
 
-// ===================== FIREBASE CONTROL =====================
+// ================= FIREBASE CONTROL =================
 void readControlFromFirebase() {
   if (Firebase.getBool(firebaseDataRead, "/smart_agriculture/control/auto_mode")) {
     autoMode = firebaseDataRead.boolData();
+  } else {
+    Serial.print("Read auto_mode failed: ");
+    Serial.println(firebaseDataRead.errorReason());
   }
 
   if (Firebase.getBool(firebaseDataRead, "/smart_agriculture/control/pump")) {
     manualPump = firebaseDataRead.boolData();
+  } else {
+    Serial.print("Read pump failed: ");
+    Serial.println(firebaseDataRead.errorReason());
   }
 
   if (Firebase.getBool(firebaseDataRead, "/smart_agriculture/control/fan")) {
     manualFan = firebaseDataRead.boolData();
+  } else {
+    Serial.print("Read fan failed: ");
+    Serial.println(firebaseDataRead.errorReason());
   }
 
   if (Firebase.getInt(firebaseDataRead, "/smart_agriculture/control/soil_threshold")) {
-    soilThreshold = firebaseDataRead.intData();
-    soilThreshold = constrain(soilThreshold, 0, 100);
+    soilThreshold = constrain(firebaseDataRead.intData(), 0, 100);
+  } else {
+    Serial.print("Read soil_threshold failed: ");
+    Serial.println(firebaseDataRead.errorReason());
   }
 
   if (Firebase.getFloat(firebaseDataRead, "/smart_agriculture/control/temp_threshold")) {
-    tempThreshold = firebaseDataRead.floatData();
-    tempThreshold = constrain(tempThreshold, 0.0, 60.0);
+    tempThreshold = constrain(firebaseDataRead.floatData(), 0.0, 60.0);
+  } else {
+    Serial.print("Read temp_threshold failed: ");
+    Serial.println(firebaseDataRead.errorReason());
   }
 }
 
-// ===================== APPLY CONTROL =====================
+// ================= APPLY CONTROL =================
 void applyControl(int soilMoisturePercent, float airTemp) {
   if (autoMode) {
-    // Auto: đất ít nước hơn ngưỡng thì bật relay tưới
+    // AUTO: đất khô hơn ngưỡng thì bật relay tưới
     pumpRunning = soilMoisturePercent < soilThreshold;
 
-    // Relay 2: nếu nhiệt độ cao hơn ngưỡng thì bật
-    // Nếu bạn chỉ muốn test relay 2 bằng app, có thể đổi thành: fanRunning = manualFan;
+    // Relay 2 tạm dùng cho quạt theo nhiệt độ
     fanRunning = airTemp > tempThreshold;
   } else {
-    // Manual: app điều khiển trực tiếp
+    // MANUAL: app điều khiển trực tiếp
     pumpRunning = manualPump;
     fanRunning = manualFan;
   }
@@ -137,7 +144,7 @@ void applyControl(int soilMoisturePercent, float airTemp) {
   writeRelay(RELAY_FAN_PIN, fanRunning);
 }
 
-// ===================== SEND DATA =====================
+// ================= SEND FIREBASE =================
 void sendSensorDataToFirebase(
   float airTemp,
   float airHumid,
@@ -160,12 +167,12 @@ void sendDeviceStateToFirebase() {
   Firebase.setBool(firebaseDataWrite, "/smart_agriculture/state/fan_running", fanRunning);
   Firebase.setString(firebaseDataWrite, "/smart_agriculture/state/mode", autoMode ? "AUTO" : "MANUAL");
 
-  // Ghi thêm để debug trên Firebase
+  // Thêm 2 key debug để nhìn trực tiếp trên Firebase
   Firebase.setBool(firebaseDataWrite, "/smart_agriculture/state/relay1", pumpRunning);
   Firebase.setBool(firebaseDataWrite, "/smart_agriculture/state/relay2", fanRunning);
 }
 
-// ===================== SETUP =====================
+// ================= SETUP =================
 void setup() {
   Serial.begin(115200);
 
@@ -197,17 +204,21 @@ void setup() {
   Firebase.reconnectWiFi(true);
   Firebase.begin(&config, &auth);
 
-  // Tạo giá trị control mặc định nếu trên Firebase chưa có.
+  // Chỉ tạo control mặc định nếu bạn muốn.
+  // Lưu ý: đoạn này sẽ ghi đè control mỗi lần ESP32 reset.
+  // Nếu app đang set pump=true mà ESP32 reset, nó sẽ set lại false.
+  /*
   Firebase.setBool(firebaseDataWrite, "/smart_agriculture/control/auto_mode", true);
   Firebase.setBool(firebaseDataWrite, "/smart_agriculture/control/pump", false);
   Firebase.setBool(firebaseDataWrite, "/smart_agriculture/control/fan", false);
   Firebase.setInt(firebaseDataWrite, "/smart_agriculture/control/soil_threshold", 40);
   Firebase.setFloat(firebaseDataWrite, "/smart_agriculture/control/temp_threshold", 35.0);
+  */
 
-  Serial.println("ESP32 Smart Agriculture started.");
+  Serial.println("ESP32 Smart Agriculture with Relay started.");
 }
 
-// ===================== LOOP =====================
+// ================= LOOP =================
 void loop() {
   unsigned long currentMillis = millis();
 
@@ -219,6 +230,18 @@ void loop() {
 
     if (isnan(airTemp) || isnan(airHumid)) {
       Serial.println("Lỗi: Không đọc được dữ liệu từ cảm biến DHT!");
+
+      // Vẫn đọc control để test relay manual kể cả DHT lỗi
+      readControlFromFirebase();
+
+      if (!autoMode) {
+        pumpRunning = manualPump;
+        fanRunning = manualFan;
+        writeRelay(RELAY_PUMP_PIN, pumpRunning);
+        writeRelay(RELAY_FAN_PIN, fanRunning);
+        sendDeviceStateToFirebase();
+      }
+
       return;
     }
 
@@ -233,13 +256,9 @@ void loop() {
     int valP = mapNpkValue(rawP);
     int valK = mapNpkValue(rawK);
 
-    // Đọc lệnh từ app Android
     readControlFromFirebase();
-
-    // Tự động hoặc thủ công điều khiển relay
     applyControl(soilMoisturePercent, airTemp);
 
-    // Gửi sensor + trạng thái relay lên Firebase
     sendSensorDataToFirebase(
       airTemp,
       airHumid,
