@@ -190,6 +190,20 @@
                 android:textSize="13sp"
                 android:textColor="#455A64"
                 android:lineSpacingMultiplier="1.1" />
+
+            <TextView
+                android:id="@+id/txtCropSuggestions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Cây phù hợp sẽ hiển thị ở đây." />
+
+            <TextView
+                android:id="@+id/txtNotRecommendedCrops"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Cây chưa phù hợp sẽ hiển thị ở đây." />
         </LinearLayout>
     </LinearLayout>
 </ScrollView>
