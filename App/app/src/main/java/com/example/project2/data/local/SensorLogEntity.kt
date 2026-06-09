@@ -16,6 +16,7 @@ data class SensorLogEntity(
     val airTemperature: Double,
     val airHumidity: Double,
     val soilMoisture: Int,
+    val soilPh: Double,
 
     val npkN: Int,
     val npkP: Int,
@@ -38,6 +39,7 @@ fun SensorLogEntity.toSensorData(): SensorData {
         airTemperature = airTemperature,
         airHumidity = airHumidity,
         soilMoisture = soilMoisture,
+        soilPh = soilPh,
         npkN = npkN,
         npkP = npkP,
         npkK = npkK,
@@ -54,6 +56,7 @@ fun createSensorLogEntity(
         airTemperature = sensorData.airTemperature,
         airHumidity = sensorData.airHumidity,
         soilMoisture = sensorData.soilMoisture,
+        soilPh = sensorData.soilPh,
         npkN = sensorData.npkN,
         npkP = sensorData.npkP,
         npkK = sensorData.npkK,

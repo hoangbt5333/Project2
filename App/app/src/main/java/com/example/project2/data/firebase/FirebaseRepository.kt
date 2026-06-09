@@ -23,6 +23,7 @@ class FirebaseRepository(
                     airTemperature = snapshot.doubleValue("air_temperature", 0.0),
                     airHumidity = snapshot.doubleValue("air_humidity", 0.0),
                     soilMoisture = snapshot.intValue("soil_moisture", 0),
+                    soilPh = snapshot.doubleValue("soil_ph", 6.5).coerceIn(0.0, 14.0),
                     npkN = snapshot.intValue("npk_n", 0),
                     npkP = snapshot.intValue("npk_p", 0),
                     npkK = snapshot.intValue("npk_k", 0),
@@ -47,12 +48,19 @@ class FirebaseRepository(
     fun observeControlState(): Flow<ControlState> = callbackFlow {
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
+                val control = snapshot.child("control")
+                val stateSnapshot = snapshot.child("state")
+
                 val state = ControlState(
-                    autoMode = snapshot.booleanValue("auto_mode", true),
-                    pump = snapshot.booleanValue("pump", false),
-                    fan = snapshot.booleanValue("fan", false),
-                    soilThreshold = snapshot.intValue("soil_threshold", 40).coerceIn(0, 100),
-                    tempThreshold = snapshot.doubleValue("temp_threshold", 35.0).coerceIn(0.0, 60.0)
+                    autoMode = control.booleanValue("auto_mode", true),
+                    pump = control.booleanValue("pump", false),
+                    fan = control.booleanValue("fan", false),
+                    soilThreshold = control.intValue("soil_threshold", 40).coerceIn(0, 100),
+                    tempThreshold = control.doubleValue("temp_threshold", 35.0).coerceIn(0.0, 60.0),
+
+                    pumpOn = stateSnapshot.booleanValue("pump_running", false),
+                    fanOn = stateSnapshot.booleanValue("fan_running", false),
+                    mode = stateSnapshot.child("mode").getValue(String::class.java) ?: "AUTO"
                 )
 
                 trySend(state)
@@ -63,10 +71,10 @@ class FirebaseRepository(
             }
         }
 
-        controlRef.addValueEventListener(listener)
+        rootRef.addValueEventListener(listener)
 
         awaitClose {
-            controlRef.removeEventListener(listener)
+            rootRef.removeEventListener(listener)
         }
     }
 
