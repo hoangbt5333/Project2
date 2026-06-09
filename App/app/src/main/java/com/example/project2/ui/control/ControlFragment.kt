@@ -115,7 +115,9 @@ class ControlFragment : Fragment(R.layout.fragment_control) {
             applyModeUi(state.autoMode)
 
             // Trang thai bom thuc do ESP32 bao ve
-            tvPumpState.text = if (state.pumpOn) "Bơm đang CHẠY" else "Bơm đang TẮT"
+            tvPumpState.text =
+                "Bơm: ${if (state.pumpOn) "CHẠY" else "TẮT"} | " +
+                        "Relay 2: ${if (state.fanOn) "CHẠY" else "TẮT"}"
         } finally {
             isRendering = false
         }

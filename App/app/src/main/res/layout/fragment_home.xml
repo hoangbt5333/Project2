@@ -349,19 +349,66 @@
                         android:layout_height="match_parent"
                         android:layout_weight="1.1"
                         android:orientation="vertical">
-                        <TextView
+<!--                        <TextView-->
+<!--                            android:layout_width="match_parent"-->
+<!--                            android:layout_height="wrap_content"-->
+<!--                            android:text="Cân bằng NPK"-->
+<!--                            android:textSize="11sp"-->
+<!--                            android:gravity="center"-->
+<!--                            android:textStyle="bold"-->
+<!--                            android:textColor="#555555"/>-->
+<!--                        <com.github.mikephil.charting.charts.RadarChart-->
+<!--                            android:id="@+id/radarChartNPK"-->
+<!--                            android:layout_width="match_parent"-->
+<!--                            android:layout_height="140dp"-->
+<!--                            android:layout_marginTop="4dp"/>-->
+                        <LinearLayout
+                            android:id="@+id/cardSoilPh"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Cân bằng NPK"
-                            android:textSize="11sp"
-                            android:gravity="center"
-                            android:textStyle="bold"
-                            android:textColor="#555555"/>
-                        <com.github.mikephil.charting.charts.RadarChart
-                            android:id="@+id/radarChartNPK"
-                            android:layout_width="match_parent"
-                            android:layout_height="140dp"
-                            android:layout_marginTop="4dp"/>
+                            android:layout_marginTop="12dp"
+                            android:background="@drawable/bg_card_white"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <TextView
+                                android:id="@+id/tvPhTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="🧪 Độ pH đất"
+                                android:textColor="#263238"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tvSoilPhValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="12dp"
+                                android:text="6.5"
+                                android:textColor="#2E7D32"
+                                android:textSize="42sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tvSoilPhStatus"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="pH phù hợp"
+                                android:textColor="#2E7D32"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tvSoilPhDesc"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:text="Đất hơi chua đến trung tính, phù hợp với đa số rau màu."
+                                android:textColor="#546E7A"
+                                android:textSize="14sp" />
+
+                        </LinearLayout>
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
