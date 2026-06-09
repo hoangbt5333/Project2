@@ -16,15 +16,10 @@ import com.example.project2.domain.ai.AiResult
 import com.example.project2.domain.ai.FarmDecision
 import com.example.project2.domain.model.SensorData
 import com.github.mikephil.charting.charts.LineChart
-import com.github.mikephil.charting.charts.RadarChart
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
-import com.github.mikephil.charting.data.RadarData
-import com.github.mikephil.charting.data.RadarDataSet
-import com.github.mikephil.charting.data.RadarEntry
-import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.github.mikephil.charting.formatter.ValueFormatter
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -57,8 +52,13 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     private lateinit var tvStatusP: TextView
     private lateinit var tvStatusK: TextView
 
-    private lateinit var radarChartNPK: RadarChart
     private lateinit var lineChartMoistureHome: LineChart
+
+    private lateinit var tvSoilPhValue: TextView
+    private lateinit var tvSoilPhStatus: TextView
+    private lateinit var tvSoilPhDesc: TextView
+    private lateinit var tvSoilStatusText: TextView
+    private lateinit var tvSoilBottomAdvice: TextView
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -85,8 +85,14 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         tvStatusP = view.findViewById(R.id.tvStatusP)
         tvStatusK = view.findViewById(R.id.tvStatusK)
 
-        radarChartNPK = view.findViewById(R.id.radarChartNPK)
         lineChartMoistureHome = view.findViewById(R.id.lineChartMoistureHome)
+
+        tvSoilPhValue = view.findViewById(R.id.tvSoilPhValue)
+        tvSoilPhStatus = view.findViewById(R.id.tvSoilPhStatus)
+        tvSoilPhDesc = view.findViewById(R.id.tvSoilPhDesc)
+
+        tvSoilStatusText = view.findViewById(R.id.tvSoilStatusText)
+        tvSoilBottomAdvice = view.findViewById(R.id.tvSoilBottomAdvice)
     }
 
     private fun observeUiState() {
@@ -113,14 +119,16 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         val n = data.npkN
         val p = data.npkP
         val k = data.npkK
+        val soilPh = data.soilPh
 
         tvSoilMoisture.text = "$soilMoist %"
+        progressSoilMoistureCircle.progress = soilMoist
 
         val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
         tvLastUpdate.text = "Last update: ${sdf.format(Date(data.timestamp))}"
 
         // Vong khuyen tron %
-        progressSoilMoistureCircle.progress = soilMoist
+
         progressMiniN.progress = (n / 2)
         progressMiniP.progress = (p / 2)
         progressMiniK.progress = (k / 2)
@@ -133,8 +141,8 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         updatePStatus(p / 2)
         updateKStatus(k / 2)
 
-        // Mang nhen dinh duong
-        updateRadarChart(n, p, k)
+        updateSoilMoistureCard(soilMoist)
+        updatePhCard(soilPh)
     }
 
     private fun renderAiResult(result: AiResult) {
@@ -168,68 +176,99 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             "N: ${result.statusN} · P: ${result.statusP} · K: ${result.statusK} (điểm ${result.nutrientScore})"
 
         // 4. Trang thai dat + diem + do tin cay
-        val tvStatusText = viewLocal.findViewById<TextView>(R.id.tvSoilStatusText)
-        val tvSoilAdvice = viewLocal.findViewById<TextView>(R.id.tvSoilBottomAdvice)
-
-        tvStatusText.text = "${result.soilStatusText} (${result.soilScore}đ · tin cậy ${result.confidence}%)"
-
-        // 5. Khuyen nghi hanh dong chinh: lay truc tiep tu AI, to mau theo canh bao
-        tvSoilAdvice.text = result.recommendation
-        if (result.isWarning) {
-            tvStatusText.setTextColor(Color.parseColor("#D84315"))
-            tvSoilAdvice.setBackgroundColor(Color.parseColor("#FFEBEE"))
-            tvSoilAdvice.setTextColor(Color.RED)
-        } else {
-            tvStatusText.setTextColor(Color.parseColor("#2E7D32"))
-            tvSoilAdvice.setBackgroundColor(Color.parseColor("#E8F5E9"))
-            tvSoilAdvice.setTextColor(Color.parseColor("#2E7D32"))
-        }
+//        val tvStatusText = viewLocal.findViewById<TextView>(R.id.tvSoilStatusText)
+//        val tvSoilAdvice = viewLocal.findViewById<TextView>(R.id.tvSoilBottomAdvice)
+//
+//        tvStatusText.text = "${result.soilStatusText} (${result.soilScore}đ · tin cậy ${result.confidence}%)"
+//
+//        // 5. Khuyen nghi hanh dong chinh: lay truc tiep tu AI, to mau theo canh bao
+//        tvSoilAdvice.text = result.recommendation
+//        if (result.isWarning) {
+//            tvStatusText.setTextColor(Color.parseColor("#D84315"))
+//            tvSoilAdvice.setBackgroundColor(Color.parseColor("#FFEBEE"))
+//            tvSoilAdvice.setTextColor(Color.RED)
+//        } else {
+//            tvStatusText.setTextColor(Color.parseColor("#2E7D32"))
+//            tvSoilAdvice.setBackgroundColor(Color.parseColor("#E8F5E9"))
+//            tvSoilAdvice.setTextColor(Color.parseColor("#2E7D32"))
+//        }
     }
 
-    private fun updateRadarChart(n: Int, p: Int, k: Int) {
-        val entries = arrayListOf(
-            RadarEntry((n / 2f)),
-            RadarEntry((p / 2f)),
-            RadarEntry((k / 2f))
-        )
-
-        val dataset = RadarDataSet(entries, "").apply {
-            color = Color.parseColor("#6FCF97")
-            fillColor = Color.parseColor("#6FCF97")
-            fillAlpha = 120
-            setDrawFilled(true)
-            lineWidth = 2f
-            setDrawHighlightIndicators(false)
-            setDrawValues(false)
+    private fun updateSoilMoistureCard(soilMoisture: Int) {
+        val status = when {
+            soilMoisture < 30 -> "Đất khô"
+            soilMoisture in 30..75 -> "Độ ẩm tốt"
+            else -> "Đất quá ẩm"
         }
 
-        radarChartNPK.apply {
-            data = RadarData(dataset)
-            description.isEnabled = false
-            legend.isEnabled = false
-            setExtraOffsets(16f, 16f, 16f, 16f)
-            xAxis.apply {
-                valueFormatter = IndexAxisValueFormatter(arrayOf("N", "P", "K"))
-                textSize = 14f
-                textColor = Color.parseColor("#F4A300")
-                axisLineColor = Color.TRANSPARENT
-                yOffset = 10f
-            }
-            yAxis.apply {
-                axisMinimum = 0f
-                axisMaximum = 100f
-                labelCount = 3
-                setDrawLabels(false)
-                gridColor = Color.parseColor("#E0E0E0")
-                axisLineColor = Color.TRANSPARENT
-            }
-            webLineWidth = 1f
-            webColor = Color.parseColor("#EAEAEA")
-            webLineWidthInner = 1f
-            webColorInner = Color.parseColor("#F0F0F0")
-            webAlpha = 80
-            invalidate()
+        val color = when {
+            soilMoisture < 30 -> Color.parseColor("#F57C00")
+            soilMoisture in 30..75 -> Color.parseColor("#2E7D32")
+            else -> Color.parseColor("#1976D2")
         }
+
+        // Phần chữ nhỏ trong vòng tròn: bỏ để tránh lặp.
+        tvSoilStatusText.visibility = View.GONE
+
+        // Phần nhận xét dưới card: chỉ để trạng thái ngắn.
+        tvSoilBottomAdvice.text = status
+        tvSoilBottomAdvice.setTextColor(color)
+
+        val backgroundColor = when {
+            soilMoisture < 30 -> Color.parseColor("#FFF3E0")
+            soilMoisture in 30..75 -> Color.parseColor("#E8F5E9")
+            else -> Color.parseColor("#E3F2FD")
+        }
+
+        tvSoilBottomAdvice.setBackgroundColor(backgroundColor)
+    }
+
+    private fun updatePhCard(ph: Double) {
+        val roundedPh = String.format(Locale.getDefault(), "%.1f", ph)
+
+        val status: String
+        val description: String
+        val color: Int
+
+        when {
+            ph < 5.5 -> {
+                status = "Đất chua"
+                description = "pH thấp, đất có xu hướng chua. Một số cây khó hấp thụ dinh dưỡng tốt."
+                color = Color.parseColor("#D84315")
+            }
+
+            ph < 6.0 -> {
+                status = "Đất hơi chua"
+                description = "Phù hợp với một số cây ưa chua nhẹ, nhưng chưa tối ưu cho đa số rau màu."
+                color = Color.parseColor("#F57C00")
+            }
+
+            ph <= 7.0 -> {
+                status = "pH phù hợp"
+                description = "Đất hơi chua đến trung tính, phù hợp với đa số rau màu."
+                color = Color.parseColor("#2E7D32")
+            }
+
+            ph <= 7.5 -> {
+                status = "Đất hơi kiềm"
+                description = "pH hơi cao, cần theo dõi nếu cây có dấu hiệu vàng lá hoặc kém phát triển."
+                color = Color.parseColor("#F9A825")
+            }
+
+            else -> {
+                status = "Đất kiềm cao"
+                description = "pH cao có thể làm cây khó hấp thụ một số chất dinh dưỡng."
+                color = Color.parseColor("#D84315")
+            }
+        }
+
+        tvSoilPhValue.text = roundedPh
+        tvSoilPhValue.setTextColor(color)
+
+        tvSoilPhStatus.text = status
+        tvSoilPhStatus.setTextColor(color)
+
+        tvSoilPhDesc.text = description
     }
 
     private fun preSetupLineChartProperties() {
