@@ -257,51 +257,52 @@
             android:layout_marginBottom="12dp"
             app:cardCornerRadius="16dp"
             app:cardElevation="0dp">
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="14dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="🌲 Dinh dưỡng đất (NPK)"
-                    android:textStyle="bold"
-                    android:textColor="#333333"
-                    android:textSize="14sp"
-                    android:layout_marginBottom="12dp"/>
+                android:padding="16dp"> <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="🌲 Dinh dưỡng đất (NPK)"
+                android:textStyle="bold"
+                android:textColor="#333333"
+                android:textSize="15sp"
+                android:layout_marginBottom="16dp"/>
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
+                    android:gravity="center_vertical"
                     android:weightSum="2">
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="0.9"
+                        android:layout_weight="1"
                         android:orientation="vertical"
-                        android:gravity="center">
+                        android:gravity="center_vertical">
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
                             android:gravity="center_vertical"
-                            android:layout_marginBottom="10dp">
+                            android:layout_marginBottom="14dp">
                             <RelativeLayout android:layout_width="45dp" android:layout_height="45dp">
-                                <ProgressBar android:id="@+id/progressMiniN" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="match_parent" android:progressDrawable="@drawable/circle_progress_green" android:max="100" android:progress="55"/>
-                                <TextView android:id="@+id/tvValuePercentN" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerInParent="true" android:text="55%" android:textSize="10sp" android:textStyle="bold"/>
+                                <ProgressBar android:id="@+id/progressMiniN" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="match_parent" android:progressDrawable="@drawable/circle_progress_green" android:max="100" android:progress="42"/>
+                                <TextView android:id="@+id/tvValuePercentN" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerInParent="true" android:text="42%" android:textSize="10sp" android:textStyle="bold"/>
                             </RelativeLayout>
                             <TextView
                                 android:id="@+id/tvStatusN"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text=" Nitơ (N)\n Trung bình"
-                                android:textSize="11sp"
-                                android:layout_marginStart="6dp"/>
+                                android:textSize="12sp"
+                                android:textColor="#FBC02D"
+                                android:layout_marginStart="8dp"/>
                         </LinearLayout>
 
                         <LinearLayout
@@ -309,19 +310,19 @@
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
                             android:gravity="center_vertical"
-                            android:layout_marginBottom="10dp">
+                            android:layout_marginBottom="14dp">
                             <RelativeLayout android:layout_width="45dp" android:layout_height="45dp">
-                                <ProgressBar android:id="@+id/progressMiniP" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="match_parent" android:progressDrawable="@drawable/circle_progress_orange" android:max="100" android:progress="30"/>
-                                <TextView android:id="@+id/tvValuePercentP" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerInParent="true" android:text="30%" android:textSize="10sp" android:textStyle="bold"/>
+                                <ProgressBar android:id="@+id/progressMiniP" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="match_parent" android:progressDrawable="@drawable/circle_progress_orange" android:max="100" android:progress="32"/>
+                                <TextView android:id="@+id/tvValuePercentP" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerInParent="true" android:text="32%" android:textSize="10sp" android:textStyle="bold"/>
                             </RelativeLayout>
                             <TextView
                                 android:id="@+id/tvStatusP"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text=" Phốt pho (P)\n Thấp"
-                                android:textSize="11sp"
-                                android:textColor="#DD2C00"
-                                android:layout_marginStart="6dp"/>
+                                android:text=" Phốt pho (P)\n Tốt"
+                                android:textSize="12sp"
+                                android:textColor="#2E7D32"
+                                android:layout_marginStart="8dp"/>
                         </LinearLayout>
 
                         <LinearLayout
@@ -330,86 +331,65 @@
                             android:orientation="horizontal"
                             android:gravity="center_vertical">
                             <RelativeLayout android:layout_width="45dp" android:layout_height="45dp">
-                                <ProgressBar android:id="@+id/progressMiniK" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="match_parent" android:progressDrawable="@drawable/circle_progress_purple" android:max="100" android:progress="80"/>
-                                <TextView android:id="@+id/tvValuePercentK" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerInParent="true" android:text="80%" android:textSize="10sp" android:textStyle="bold"/>
+                                <ProgressBar android:id="@+id/progressMiniK" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="match_parent" android:progressDrawable="@drawable/circle_progress_purple" android:max="100" android:progress="45"/>
+                                <TextView android:id="@+id/tvValuePercentK" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerInParent="true" android:text="45%" android:textSize="10sp" android:textStyle="bold"/>
                             </RelativeLayout>
                             <TextView
                                 android:id="@+id/tvStatusK"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text=" Kali (K)\n Tốt"
-                                android:textSize="11sp"
-                                android:textColor="#2E7D32"
-                                android:layout_marginStart="6dp"/>
+                                android:text=" Kali (K)\n Trung bình"
+                                android:textSize="12sp"
+                                android:textColor="#FBC02D"
+                                android:layout_marginStart="8dp"/>
                         </LinearLayout>
                     </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1.1"
-                        android:orientation="vertical">
-<!--                        <TextView-->
-<!--                            android:layout_width="match_parent"-->
-<!--                            android:layout_height="wrap_content"-->
-<!--                            android:text="Cân bằng NPK"-->
-<!--                            android:textSize="11sp"-->
-<!--                            android:gravity="center"-->
-<!--                            android:textStyle="bold"-->
-<!--                            android:textColor="#555555"/>-->
-<!--                        <com.github.mikephil.charting.charts.RadarChart-->
-<!--                            android:id="@+id/radarChartNPK"-->
-<!--                            android:layout_width="match_parent"-->
-<!--                            android:layout_height="140dp"-->
-<!--                            android:layout_marginTop="4dp"/>-->
-                        <LinearLayout
-                            android:id="@+id/cardSoilPh"
-                            android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:paddingStart="12dp"> <TextView
+                        android:id="@+id/tvPhTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🧪 Độ pH đất"
+                        android:textColor="#263238"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvSoilPhValue"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="12dp"
-                            android:background="@drawable/bg_card_white"
-                            android:orientation="vertical"
-                            android:padding="16dp">
+                            android:layout_marginTop="8dp"
+                            android:text="6,5"
+                            android:textColor="#2E7D32"
+                            android:textSize="46sp"
+                            android:textStyle="bold" />
 
-                            <TextView
-                                android:id="@+id/tvPhTitle"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="🧪 Độ pH đất"
-                                android:textColor="#263238"
-                                android:textSize="18sp"
-                                android:textStyle="bold" />
+                        <TextView
+                            android:id="@+id/tvSoilPhStatus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="pH phù hợp"
+                            android:textColor="#2E7D32"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
 
-                            <TextView
-                                android:id="@+id/tvSoilPhValue"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="12dp"
-                                android:text="6.5"
-                                android:textColor="#2E7D32"
-                                android:textSize="42sp"
-                                android:textStyle="bold" />
+                        <TextView
+                            android:id="@+id/tvSoilPhDesc"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text=""
+                            android:textColor="#546E7A"
+                            android:textSize="14sp"/>
 
-                            <TextView
-                                android:id="@+id/tvSoilPhStatus"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="pH phù hợp"
-                                android:textColor="#2E7D32"
-                                android:textSize="16sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:id="@+id/tvSoilPhDesc"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
-                                android:text="Đất hơi chua đến trung tính, phù hợp với đa số rau màu."
-                                android:textColor="#546E7A"
-                                android:textSize="14sp" />
-
-                        </LinearLayout>
                     </LinearLayout>
+
                 </LinearLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
