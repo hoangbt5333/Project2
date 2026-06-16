@@ -38,6 +38,10 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
     private lateinit var tvLastUpdate: TextView
     private lateinit var tvSoilMoisture: TextView
+    private lateinit var tvAirTemperature: TextView
+    private lateinit var tvAirTempHumidity: TextView
+
+
 
     private lateinit var progressSoilMoistureCircle: ProgressBar
     private lateinit var progressMiniN: ProgressBar
@@ -71,6 +75,9 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     private fun bindViews(view: View) {
         tvLastUpdate = view.findViewById(R.id.tvLastUpdate)
         tvSoilMoisture = view.findViewById(R.id.tvSoilMoisture)
+        tvAirTemperature = view.findViewById(R.id.tvAirTemperature)
+        tvAirTempHumidity = view.findViewById(R.id.tvAirHumidity)
+
 
         progressSoilMoistureCircle = view.findViewById(R.id.progressSoilMoistureCircle)
         progressMiniN = view.findViewById(R.id.progressMiniN)
@@ -126,6 +133,13 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
         val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
         tvLastUpdate.text = "Last update: ${sdf.format(Date(data.timestamp))}"
+
+        // Nhiet do & do am khong khi
+        val airTemp = String.format(Locale.getDefault(), "%.1f", data.airTemperature)
+        val airHumid = String.format(Locale.getDefault(), "%.0f", data.airHumidity)
+        tvAirTemperature.text = "$airTemp °C"
+        tvAirTempHumidity.text = "$airHumid %"
+
 
         // Vong khuyen tron %
 
