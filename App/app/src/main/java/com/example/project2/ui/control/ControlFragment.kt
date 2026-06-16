@@ -104,8 +104,8 @@ class ControlFragment : Fragment(R.layout.fragment_control) {
 
         try {
             switchAutoMode.isChecked = state.autoMode
-            switchPump.isChecked = state.pump
-            switchFan.isChecked = state.fan
+            switchPump.isChecked = if (state.autoMode) state.pumpOn else state.pump
+            switchFan.isChecked = if (state.autoMode) state.fanOn else state.fan
 
             seekSoil.progress = state.soilThreshold
             seekTemp.progress = state.tempThreshold.toInt()
@@ -126,8 +126,10 @@ class ControlFragment : Fragment(R.layout.fragment_control) {
     private fun applyModeUi(autoOn: Boolean) {
         // O che do AUTO: ESP32 tu quyet dinh bom -> vo hieu hoa nut bom thu cong
         switchPump.isEnabled = !autoOn
+        switchFan.isEnabled = !autoOn
+
         tvModeHint.text = if (autoOn)
-            "Đang ở chế độ TỰ ĐỘNG: hệ thống tự bật bơm khi độ ẩm đất thấp hơn ngưỡng."
+            "Đang ở chế độ TỰ ĐỘNG: bơm tự bật theo độ ẩm đất, Relay 2 tự bật theo nhiệt độ."
         else
             "Đang ở chế độ THỦ CÔNG: bạn tự bật/tắt thiết bị."
     }
