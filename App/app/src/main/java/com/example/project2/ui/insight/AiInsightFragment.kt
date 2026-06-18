@@ -25,21 +25,18 @@ class AiInsightFragment : Fragment(R.layout.fragment_ai_insight) {
 
     private val dateFormat = SimpleDateFormat("HH:mm:ss dd/MM", Locale.getDefault())
 
-    // --- The "Ket qua moi nhat" ---
     private lateinit var txtEmpty: TextView
     private lateinit var cardLatest: View
+
     private lateinit var txtLatestTime: TextView
     private lateinit var txtLatestScore: TextView
     private lateinit var txtLatestDecision: TextView
     private lateinit var txtLatestSummary: TextView
     private lateinit var txtLatestRecommendation: TextView
 
-    // --- The "Thong ke nhanh" ---
-    private lateinit var txtAverageScore: TextView
-    private lateinit var txtWarningCount: TextView
-
-    // --- The "Nhat ky gan day" ---
-    private lateinit var txtRecentLogs: TextView
+    private lateinit var txtActionList: TextView
+    private lateinit var txtCropSuggestions: TextView
+    private lateinit var txtNotRecommendedCrops: TextView
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -51,37 +48,37 @@ class AiInsightFragment : Fragment(R.layout.fragment_ai_insight) {
     private fun bindViews(view: View) {
         txtEmpty = view.findViewById(R.id.txtEmpty)
         cardLatest = view.findViewById(R.id.cardLatest)
+
         txtLatestTime = view.findViewById(R.id.txtLatestTime)
         txtLatestScore = view.findViewById(R.id.txtLatestScore)
         txtLatestDecision = view.findViewById(R.id.txtLatestDecision)
         txtLatestSummary = view.findViewById(R.id.txtLatestSummary)
         txtLatestRecommendation = view.findViewById(R.id.txtLatestRecommendation)
 
-        txtAverageScore = view.findViewById(R.id.txtAverageScore)
-        txtWarningCount = view.findViewById(R.id.txtWarningCount)
-
-        txtRecentLogs = view.findViewById(R.id.txtRecentLogs)
+        txtActionList = view.findViewById(R.id.txtActionList)
+        txtCropSuggestions = view.findViewById(R.id.txtCropSuggestions)
+        txtNotRecommendedCrops = view.findViewById(R.id.txtNotRecommendedCrops)
     }
 
     private fun observeUiState() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { state ->
-                    renderLatestInsight(state.latestLog)
+                    renderLatestLog(state.latestLog)
                     renderAiInsight(state.latestAiResult)
-                    renderSummary(
-                        averageScore = state.averageScore,
-                        warningCount = state.warningCount
-                    )
-                    renderRecentLogs(state.recentLogs)
                 }
             }
         }
     }
 
-    private fun renderLatestInsight(log: SensorLogEntity?) {
+    private fun renderLatestLog(log: SensorLogEntity?) {
         if (log == null) {
-            txtLatestSummary.text = "Chưa có dữ liệu AI."
+            txtEmpty.visibility = View.VISIBLE
+            cardLatest.visibility = View.GONE
+
+            txtActionList.text = "Chưa có dữ liệu để đưa ra khuyến nghị."
+            txtCropSuggestions.text = "Chưa đủ dữ liệu để gợi ý cây trồng phù hợp."
+            txtNotRecommendedCrops.text = "Chưa đủ dữ liệu để đánh giá cây chưa phù hợp."
             return
         }
 
@@ -90,64 +87,60 @@ class AiInsightFragment : Fragment(R.layout.fragment_ai_insight) {
 
         txtLatestTime.text = dateFormat.format(Date(log.timestamp))
         txtLatestScore.text = "${log.soilScore}/100"
+
         txtLatestDecision.text = decisionLabel(log.decision)
         txtLatestDecision.setTextColor(decisionColor(log.decision))
+
         txtLatestSummary.text = log.aiSummary
         txtLatestRecommendation.text = log.recommendation
+
+
+        txtLatestRecommendation.visibility = View.GONE
     }
 
     private fun renderAiInsight(result: AiResult?) {
-        if (result == null) {
-            // txtLatestSummary.text = "Chưa có dữ liệu AI."
-            return
+        if (result == null) return
+
+        txtLatestScore.text = "${result.soilScore}/100"
+
+        txtLatestDecision.text = decisionLabel(result.decision.name)
+        txtLatestDecision.setTextColor(decisionColor(result.decision.name))
+
+        txtLatestSummary.text = buildString {
+            append(result.insightTitle)
+            append("\n\n")
+            append(result.insightAnalysis)
         }
 
-        // Ví dụ nếu bạn có các TextView tương ứng:
-        // txtInsightTitle.text = result.insightTitle
-        // txtLatestScore.text = "${result.soilScore}/100"
-        // txtLatestDecision.text = result.decision.name
-        // txtLatestSummary.text = result.insightAnalysis
-        // txtLatestRecommendation.text = result.immediateActions.joinToString("\n") { "• $it" }
+        txtLatestRecommendation.text = result.recommendation
 
-        val cropText = result.cropSuggestions.joinToString("\n") {
-            "• ${it.name}: ${it.score}% - ${it.reason}"
+        txtActionList.text = if (result.immediateActions.isNotEmpty()) {
+            result.immediateActions.joinToString("\n") { action ->
+                "• $action"
+            }
+        } else {
+            "• Tiếp tục theo dõi các chỉ số cảm biến."
         }
 
-        val notRecommendedText = result.notRecommendedCrops.joinToString("\n") {
-            "• ${it.name}: ${it.score}% - ${it.reason}"
+        txtCropSuggestions.text = if (result.cropSuggestions.isNotEmpty()) {
+            result.cropSuggestions
+                .take(3)
+                .joinToString("\n\n") { crop ->
+                    "• ${crop.name} (${crop.score}/100)\n${crop.reason}"
+                }
+        } else {
+            "Chưa tìm được cây thật sự phù hợp với điều kiện hiện tại."
         }
 
-        // txtCropSuggestions.text = cropText
-        // txtNotRecommendedCrops.text = notRecommendedText
-    }
-
-    private fun renderSummary(averageScore: Int, warningCount: Int) {
-        txtAverageScore.text = "$averageScore/100"
-        txtWarningCount.text = if (warningCount > 0)
-            "$warningCount cảnh báo gần đây"
-        else
-            "Không có cảnh báo gần đây"
-        txtWarningCount.setTextColor(
-            if (warningCount > 0) Color.parseColor("#D84315") else Color.parseColor("#2E7D32")
-        )
-    }
-
-    private fun renderRecentLogs(logs: List<SensorLogEntity>) {
-        // Cách gọn nhất: render thành TextView nhiều dòng.
-        // Nếu muốn đẹp hơn thì làm RecyclerView adapter nhỏ.
-
-        val text = logs.joinToString(separator = "\n\n") { log ->
-            val time = dateFormat.format(Date(log.timestamp))
-
-            """
-            $time
-            Điểm đất: ${log.soilScore}/100
-            Quyết định: ${log.decision}
-            ${log.recommendation}
-            """.trimIndent()
+        txtNotRecommendedCrops.text = if (result.notRecommendedCrops.isNotEmpty()) {
+            result.notRecommendedCrops
+                .take(3)
+                .joinToString("\n\n") { crop ->
+                    "• ${crop.name} (${crop.score}/100)\n${crop.reason}"
+                }
+        } else {
+            "Chưa có cây nào bị đánh giá là không phù hợp rõ ràng."
         }
-
-        // txtRecentLogs.text = text
     }
 
     private fun decisionLabel(decision: String): String = when (decision) {
@@ -156,6 +149,7 @@ class AiInsightFragment : Fragment(R.layout.fragment_ai_insight) {
         "STOP_WATERING" -> "Ngừng tưới nước"
         "COOLING_NEEDED" -> "Cần làm mát"
         "NEED_FERTILIZER" -> "Cần bón phân"
+        "PH_PROBLEM" -> "Vấn đề pH"
         "SENSOR_ERROR" -> "Lỗi cảm biến"
         else -> decision
     }
